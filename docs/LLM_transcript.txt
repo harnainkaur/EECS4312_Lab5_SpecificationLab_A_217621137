@@ -247,3 +247,134 @@ No `raise NotImplementedError` is needed anymore.
 
 If you want, I can rewrite your full stub **with the new working implementation** ready to paste in your file. Do you want me to do that?
 "
+------------------------------
+(base) harnainkaur@Harnains-MacBook-Pro EECS4312_Lab5_SpecificationLab_A_217621137 % ls
+README.md       docs            src             tests
+(base) harnainkaur@Harnains-MacBook-Pro EECS4312_Lab5_SpecificationLab_A_217621137 % solution is in scr
+
+response: 
+Ahhh — perfect, thank you. This explains **everything** 👍
+You were doing nothing wrong earlier.
+
+Your structure is:
+
+```
+EECS4312_Lab5_SpecificationLab_A_217621137/
+├── README.md
+├── docs/
+├── src/
+│   └── solution.py   ← 🔴 HERE
+└── tests/
+    └── test_solution.py
+```
+
+But your test says:
+
+```python
+from solution import suggest_slots
+```
+
+Python is looking for `solution.py` **in the root**, not inside `src/`.
+
+---
+
+## ✅ CORRECT FIX (DO THIS)
+
+Since labs usually expect **this exact import**, the cleanest fix is to tell Python:
+
+> “`src/` is part of the module search path”
+
+### 1️⃣ Create `conftest.py` in the ROOT directory
+
+```bash
+touch conftest.py
+```
+
+### 2️⃣ Put this EXACT code inside `conftest.py`
+
+```python
+import sys
+import os
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "src")))
+```
+
+This tells pytest:
+
+> “Before running tests, include `src/` when resolving imports.”
+
+---
+
+### 3️⃣ Run pytest again
+
+```bash
+pytest
+```
+
+✅ This will make:
+
+```python
+from solution import suggest_slots
+```
+
+successfully import:
+
+```
+src/solution.py
+```
+
+---
+
+## ❌ What NOT to do
+
+Do **NOT**:
+
+* Move `solution.py` unless the lab explicitly allows it
+* Change the import in the test file
+* Rename `solution.py`
+
+Your graders expect this layout.
+
+---
+
+## ✅ Alternative (ONLY if allowed by the lab)
+
+If your instructor allows it, you could also move the file:
+
+```bash
+mv src/solution.py solution.py
+```
+
+But **do NOT do this unless the lab instructions say so**.
+
+---
+
+## 🎯 Why this matters (exam-level understanding)
+
+* Python does **not search `src/` by default**
+* Pytest uses **isolated module resolution**
+* `conftest.py` is the **official pytest configuration hook**
+* This is a **real-world Python packaging issue**, not a student mistake
+
+---
+
+## After this fix
+
+You should see something like:
+
+```
+collected 4 items
+tests/test_solution.py ....                         [100%]
+```
+
+🎉
+
+---
+
+If you want next, I can:
+
+* Double-check your implementation against **hidden tests**
+* Help you write the **design rationale**
+* Explain how this maps to **specification-based testing** (very EECS 4312)
+
+Just say the word 😊

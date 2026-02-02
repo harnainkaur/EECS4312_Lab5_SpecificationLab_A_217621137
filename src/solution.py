@@ -68,15 +68,17 @@ def suggest_slots(
     
     # generate valid slots
     valid_slots = []
-    duration_delta = timedelta(minutes=meeting_duration)
-    
-    for start, end in free_intervals:
-        t = start
-        while t + meeting_duration <= end:
-            slots.append(to_time_str(t))
+    for free_start, free_end in free_times:
+        t = ((free_start + STEP - 1) // STEP) * STEP
+
+        while t + meeting_duration <= free_end:
+            # No meetings may start during lunch
+            if not (LUNCH_START <= t < LUNCH_END):
+                valid_slots.append(to_time_str(t))
             t += STEP
 
     return valid_slots
+    
 
     # TODO: Implement this function
     raise NotImplementedError("suggest_slots function has not been implemented yet")
