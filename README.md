@@ -1,6 +1,6 @@
 ## TODO:
-## Student Name:
-## Student ID: 
+## Student Name: Harnaindeep Kaur
+## Student ID: 217621137
 
 # Meeting Slot Suggestion Lab Repository
 

@@ -1,5 +1,5 @@
-## Student Name:
-## Student ID: 
+## Student Name: Harnaindeep Kaur
+## Student ID: 217621137
 
 """
 Stub file for the meeting slot suggestion exercise.
