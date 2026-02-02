@@ -1,3 +1,6 @@
 TaskA_sol/
 EECS4312_Lab5_SpecificationLab_A.code-workspace
-TaskA_sol/hidden_tests_v2.py
+TaskA_sol/hidden_tests_v2.py# Ignore Python cache files
+__pycache__/
+*.py[cod]
+*.class
