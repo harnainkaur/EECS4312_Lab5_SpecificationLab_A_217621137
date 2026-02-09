@@ -11,38 +11,24 @@ for full requirements.
 from typing import List, Dict
 #from datetime import datetime, timedelta
 
-def suggest_slots(
-    events: List[Dict[str, str]],
-    meeting_duration: int,
-    day: str
-) -> List[str]:
-    """
-    Suggest possible meeting start times for a given day.
+def suggest_slots(events, meeting_duration, day):
 
-    Args:
-        events: List of dicts with keys {"start": "HH:MM", "end": "HH:MM"}
-        meeting_duration: Desired meeting length in minutes
-        day: Three-letter day abbreviation (e.g., "Mon", "Tue", ... "Fri")
+    if meeting_duration <= 0:
+        return []
 
-    Returns:
-        List of valid start times as "HH:MM" sorted ascending
-    """
-    
-    def to_minutes(t: str) -> int:
+    def to_minutes(t):
         h, m = map(int, t.split(":"))
         return h * 60 + m
 
-    def to_time_str(minutes: int) -> str:
+    def to_time_str(minutes):
         return f"{minutes // 60:02d}:{minutes % 60:02d}"
 
-    # working hours
     WORK_START = to_minutes("09:00")
     WORK_END = to_minutes("17:00")
     LUNCH_START = to_minutes("12:00")
     LUNCH_END = to_minutes("13:00")
-    STEP = 15 
+    STEP = 15
 
-    #convert events to datetime objects
     busy = []
     for e in events:
         start = to_minutes(e["start"])
@@ -53,32 +39,30 @@ def suggest_slots(
 
     busy.sort()
 
-    # find free times
     free_times = []
     current_time = WORK_START
-    
+
+    # FIXED INDENTATION HERE
     for start, end in busy:
         if start > current_time:
             free_times.append((current_time, start))
-        current_time = max(current_time, end)
+        current_time = max(current_time, end + STEP)  # 15-min buffer after events
 
-    # add remaining time after last event
     if current_time < WORK_END:
         free_times.append((current_time, WORK_END))
-    
-    # generate valid slots
+
     valid_slots = []
+
     for free_start, free_end in free_times:
         t = ((free_start + STEP - 1) // STEP) * STEP
 
-        while t + meeting_duration <= free_end:
-            # No meetings may start during lunch
-            if not (LUNCH_START <= t < LUNCH_END):
+        while t + meeting_duration <= free_end and t < WORK_END:
+            meeting_end = t + meeting_duration
+            overlaps_lunch = not (meeting_end <= LUNCH_START or t >= LUNCH_END)
+
+            if not overlaps_lunch:
                 valid_slots.append(to_time_str(t))
+
             t += STEP
 
     return valid_slots
-    
-
-    # TODO: Implement this function
-    raise NotImplementedError("suggest_slots function has not been implemented yet")
