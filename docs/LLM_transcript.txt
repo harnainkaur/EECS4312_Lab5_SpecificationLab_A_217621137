@@ -378,3 +378,179 @@ If you want next, I can:
 * Explain how this maps to **specification-based testing** (very EECS 4312)
 
 Just say the word 😊
+
+
+
+##LAB 6
+
+Prompt 1:
+okay part 1 is good. part 2 - meetings scheduled on fridays must not start after 15:00. this req aapplies in addition to all previously described behaviour. if a meeting would otherwise be valid but starts after 15:00 on a Friday, it must be excluded from the returned results. update yopur solution, tests aND DOCUMENTS TO INCOPORATE THIS REQUIREMENT. OKAY GIVE ME A DETAILED SUMMARY OF HOW TO IMPLEMENT THIS. 
+
+LLM RESPONSE 1: Got you 👍 — here is a **clear, step-by-step implementation plan** (no code), so you can implement Part 2 yourself and still pass all tests.
+
+---
+
+# Part 2 — Friday Constraint (Design Summary)
+
+## New Requirement
+
+Meetings **cannot start after 15:00 on Fridays**.
+
+Important clarifications:
+
+* Applies **only on Friday**
+* A meeting **starting at exactly 15:00 is allowed**
+* Meetings starting **after 15:00 (15:15, 15:30, …)** must be excluded
+* All previous rules still apply (working hours, lunch, buffer, sorting, etc.)
+
+---
+
+# Step-by-Step Implementation Plan
+
+## 1. Decide how to detect Friday
+
+Your function receives a `day` parameter. It might be:
+
+* `"Fri"`
+* `"Friday"`
+* `"2026-02-06"` (date format)
+
+So your logic should determine:
+
+> Is this day Friday?
+
+Typical approaches:
+
+* Check if string starts with `"fri"` (case-insensitive)
+* OR parse the date and check weekday
+* OR match lab’s expected format
+
+Goal: produce a boolean → `is_friday`
+
+---
+
+## 2. Define the Friday cutoff time
+
+Convert `"15:00"` into minutes (same way you did for working hours and lunch).
+
+This represents:
+
+> The latest allowed **start time** on Friday.
+
+---
+
+## 3. Integrate into slot generation loop
+
+You already generate candidate start times inside your **while loop**.
+
+At that point you have:
+
+* `t` → candidate meeting start time (in minutes)
+
+Before accepting the slot, check:
+
+> If today is Friday AND start time is AFTER 15:00 → reject it
+
+Important:
+
+* `15:00` → allowed
+* `15:01+` → not allowed
+* This rule should run **before adding the slot**
+
+---
+
+## 4. Decide whether to “skip” or “stop”
+
+Once you reach a time **after 15:00 on Friday**, all later times will also be invalid.
+
+So instead of just skipping one slot, you should:
+
+* Stop checking further times in that free block
+* Exit the loop early for efficiency
+
+---
+
+## 5. Ensure rule does NOT affect other days
+
+If the day is **not Friday**, your function must behave exactly like Part 1.
+
+---
+
+## 6. Edge Cases to Verify
+
+Make sure your logic handles:
+
+### Case A — Meeting at 15:00
+
+Should be included ✔
+
+### Case B — Meeting at 15:15
+
+Should be excluded ✘
+
+### Case C — Long meeting starting before 15:00
+
+Example:
+
+* Start = 14:45
+* Duration = 60
+  Still valid ✔ (rule only cares about **start time**)
+
+### Case D — Non-Friday
+
+No change in behavior ✔
+
+---
+
+## 7. Update Tests
+
+You should add tests that verify:
+
+1. Meetings at 15:00 exist on Friday
+2. Meetings after 15:00 do not
+3. Other weekdays unaffected
+
+---
+
+## 8. Update Documentation
+
+Document the new constraint clearly:
+
+* Friday-only rule
+* Cutoff is **start time**
+* 15:00 allowed, after not allowed
+* Applies in addition to all previous rules
+
+---
+
+# Final Logic Flow (Conceptual)
+
+When generating candidate slot `t`:
+
+1. Check working hours
+2. Check buffer / free time
+3. Check lunch overlap
+4. **Check Friday cutoff**
+5. If all pass → add slot
+
+---
+
+If you want, I can next:
+
+* Review your implementation logic
+* Help you detect Friday correctly
+* Help you design perfect test cases
+* Predict which edge case your autograder will test
+
+Just say 👍
+
+
+PROMPT 2: CAN YOU ADD 5 MORE TESTS FOR a function that suggest spossoble meeting
+time slots for a given day. the function takes as input a list of existiing calender
+events for that day and a desired meeting duration. its goal is to retyurn a list of 
+valid start times at which the meeting could be scheduled. a valid time slot should 
+respect typical workimg hours and should not conflict with existing events. if no 
+suitable time slots are available, teh function should return an empty list. 
+you may assume that time values are provode in a standard string formag eg "09:30". 
+how should i got about implementing such a function. "PASTED EXISTING TESTS"
+REPSONSE 2:

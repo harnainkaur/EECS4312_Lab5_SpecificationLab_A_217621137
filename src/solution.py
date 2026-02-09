@@ -27,7 +27,11 @@ def suggest_slots(events, meeting_duration, day):
     WORK_END = to_minutes("17:00")
     LUNCH_START = to_minutes("12:00")
     LUNCH_END = to_minutes("13:00")
+    FRIDAY_CUTOFF = to_minutes("15:00")   # new rule
     STEP = 15
+
+    # detect Friday (supports "Fri" or date like "2026-02-06")
+    is_friday = str(day).lower().startswith("fri") or str(day).endswith("-5")
 
     busy = []
     for e in events:
@@ -42,11 +46,10 @@ def suggest_slots(events, meeting_duration, day):
     free_times = []
     current_time = WORK_START
 
-    # FIXED INDENTATION HERE
     for start, end in busy:
         if start > current_time:
             free_times.append((current_time, start))
-        current_time = max(current_time, end + STEP)  # 15-min buffer after events
+        current_time = max(current_time, end + STEP)
 
     if current_time < WORK_END:
         free_times.append((current_time, WORK_END))
@@ -57,6 +60,11 @@ def suggest_slots(events, meeting_duration, day):
         t = ((free_start + STEP - 1) // STEP) * STEP
 
         while t + meeting_duration <= free_end and t < WORK_END:
+
+            # Friday rule — exclude starts AFTER 15:00
+            if is_friday and t > FRIDAY_CUTOFF:
+                break
+
             meeting_end = t + meeting_duration
             overlaps_lunch = not (meeting_end <= LUNCH_START or t >= LUNCH_END)
 

@@ -64,3 +64,80 @@ def test_lunch_break_blocks_all_slots_during_lunch():
     assert "12:45" not in slots
 
 """TODO: Add at least 5 additional test cases to test your implementation."""
+
+def test_no_events_full_day_availability():
+    """
+    Functional:
+    With no events, system should return all valid slots within working hours
+    excluding lunch overlap.
+    """
+    events = []
+    slots = suggest_slots(events, meeting_duration=60, day="2026-02-01")
+
+    assert "09:00" in slots
+    assert "11:00" in slots      # valid before lunch
+    assert "12:00" not in slots  # lunch blocked
+    assert "16:00" in slots      # last valid slot
+
+
+def test_event_blocks_morning():
+    """
+    Functional:
+    An event in the morning should block all overlapping slots.
+    """
+    events = [{"start": "09:00", "end": "11:00"}]
+    slots = suggest_slots(events, meeting_duration=30, day="2026-02-01")
+
+    assert "09:00" not in slots
+    assert "10:30" not in slots
+    assert "11:00" in slots
+
+
+def test_meeting_ends_exactly_at_lunch_is_allowed():
+    """
+    Boundary:
+    A meeting that ends exactly at 12:00 should be allowed.
+    """
+    events = []
+    slots = suggest_slots(events, meeting_duration=60, day="2026-02-01")
+
+    assert "11:00" in slots      # ends at 12:00 → valid
+    assert "11:15" not in slots  # crosses lunch → invalid
+
+
+def test_event_at_end_of_day():
+    """
+    Boundary:
+    Event at end of day should block final slots only.
+    """
+    events = [{"start": "16:00", "end": "17:00"}]
+    slots = suggest_slots(events, meeting_duration=60, day="2026-02-01")
+
+    assert "15:00" in slots
+    assert "16:00" not in slots
+
+
+def test_multiple_events_create_small_gap():
+    """
+    Functional:
+    System should detect small valid gaps between events.
+    """
+    events = [
+        {"start": "09:00", "end": "10:00"},
+        {"start": "10:30", "end": "11:00"}
+    ]
+    slots = suggest_slots(events, meeting_duration=30, day="2026-02-01")
+
+    assert "10:00" in slots      # gap between events
+    assert "09:30" not in slots
+    assert "10:30" not in slots
+
+#TEST CASE FOR LAB 6
+def test_friday_no_meetings_after_1500():
+    events = []
+    slots = suggest_slots(events, meeting_duration=30, day="Fri")
+
+    assert "15:00" in slots
+    assert "15:15" not in slots
+    assert "15:30" not in slots
+    assert "16:00" not in slots
