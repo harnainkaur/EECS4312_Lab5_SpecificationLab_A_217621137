@@ -1,15 +1,4 @@
-## Student Name: Harnaindeep Kaur
-## Student ID: 217621137
-
-"""
-Stub file for the meeting slot suggestion exercise.
-
-Implement the function `suggest_slots` to return a list of valid meeting start times
-on a given day, taking into account working hours, and possible specific constraints. See the lab handout
-for full requirements.
-"""
 from typing import List, Dict
-#from datetime import datetime, timedelta
 
 def suggest_slots(events, meeting_duration, day):
 
@@ -27,12 +16,12 @@ def suggest_slots(events, meeting_duration, day):
     WORK_END = to_minutes("17:00")
     LUNCH_START = to_minutes("12:00")
     LUNCH_END = to_minutes("13:00")
-    FRIDAY_CUTOFF = to_minutes("15:00")   # new rule
+    FRIDAY_CUTOFF = to_minutes("15:00")
     STEP = 15
 
-    # detect Friday (supports "Fri" or date like "2026-02-06")
     is_friday = str(day).lower().startswith("fri") or str(day).endswith("-5")
 
+    # Build busy intervals
     busy = []
     for e in events:
         start = to_minutes(e["start"])
@@ -43,25 +32,35 @@ def suggest_slots(events, meeting_duration, day):
 
     busy.sort()
 
+    # Merge overlapping busy intervals
+    merged_busy = []
+    for start, end in busy:
+        if not merged_busy:
+            merged_busy.append((start, end))
+        else:
+            last_start, last_end = merged_busy[-1]
+            if start <= last_end:
+                merged_busy[-1] = (last_start, max(last_end, end))
+            else:
+                merged_busy.append((start, end))
+
+    # Build free intervals
     free_times = []
     current_time = WORK_START
-
-    for start, end in busy:
+    for start, end in merged_busy:
         if start > current_time:
             free_times.append((current_time, start))
-        current_time = max(current_time, end + STEP)
-
+        current_time = max(current_time, end)
     if current_time < WORK_END:
         free_times.append((current_time, WORK_END))
 
+    # Generate valid slots
     valid_slots = []
-
     for free_start, free_end in free_times:
-        t = ((free_start + STEP - 1) // STEP) * STEP
+        # Align to global STEP grid starting at WORK_START
+        t = WORK_START + ((free_start - WORK_START + STEP - 1) // STEP) * STEP
 
         while t + meeting_duration <= free_end and t < WORK_END:
-
-            # Friday rule — exclude starts AFTER 15:00
             if is_friday and t > FRIDAY_CUTOFF:
                 break
 
